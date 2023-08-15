@@ -5,7 +5,7 @@
 # Introduction
 
 Our team is interested in modeling **Life Expectancy** using a
-combination of various fundamental global indicators available at the
+combination of various fundamental global indicators available at the 
 [World Bank](https://databank.worldbank.org/home). Among the
 various indicators for which data was available, we chose only those
 with sufficient data provided for most countries, had the latest data no
