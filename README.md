@@ -1,6 +1,6 @@
 # Predicting Life Expectancy Using Various Fundamental Global Demographical, Economic, Envirnomental, and Health Indicators
 
-**Note: This is a much shorter version of the actual paper. The README does not contain many crucial plots used to conduct the following analysis. The html file to view the entire project can be found [here]().**
+**Note: This is a much shorter version of the actual paper. The README does not contain many crucial plots used to conduct the following analysis. The html file to view the entire project can be found [here](https://htmlpreview.github.io/?https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Predicting_Life_Expectancy.html).**
 
 # Introduction
 
