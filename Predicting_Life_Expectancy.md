@@ -1,3 +1,7 @@
+# Predicting Life Expectancy Using Various Fundamental Global Demographical, Economic, Envirnomental, and Health Indicators
+
+**Note: This is a much shorter version of the actual paper. The README does not contain many crucial plots used to conduct the following analysis. The html file to view the entire project can be found [here]().**
+
 # Introduction
 
 Our team is interested in modeling **Life Expectancy** using a
@@ -109,36 +113,26 @@ will be removing many developing/under-developed from our dataset
 thereby causing us to only look at those countries which have the data
 to provide.*
 
-# Exploratory Visuals
+Many of the predictor variables are heavily skewed to the right due to the presence of extreme outliers. 
+In order to rectify these issues, our team chose to use the logarithmic scaling for the necessary variables in order to make our predictors resemble a Gaussian distribution and reduce the effect of outliers.
 
-## Interactive Table
+```{r, echo = F}
+data$Pop.Dens <- log(data$Pop.Dens)
+data$GDP <- log(data$GDP)
+data$Fert.Rate <- log(data$Fert.Rate)
+data$Infl <- sign(data$Infl) * log(abs(data$Infl))
+data$CO2 <- log(data$CO2)
+data$Diabetes <- log(data$Diabetes)
+data$Unemp <- log(data$Unemp)
+```
 
-![](Predicting_Life_Expectancy_files/figure-markdown_github/unnamed-chunk-3-1.png)
+# Fitting Preliminary MLRM and Checking for Multi-Collinearity
 
-## Histograms and Boxplots for predictors
-
-![](Predicting_Life_Expectancy_files/figure-markdown_github/unnamed-chunk-4-1.png)
-
-From the boxplot/histogram above, we can see that many of the predictor
-variables are heavily skewed to the right due to the presence of extreme
-outliers. In order to rectify these issues, our team chose to use the
-logarithmic scaling for the necessary variables in order to make our
-predictors resemble a Gaussian distribution and reduce the effect of
-outliers.
-
-![](Predicting_Life_Expectancy_files/figure-markdown_github/unnamed-chunk-6-1.png)
-
-## Scatter plots with Life Expectancy as Response Variable
-
-![](Predicting_Life_Expectancy_files/figure-markdown_github/unnamed-chunk-7-1.png)
-
-We can see that Life Expectancy ~ Log Unemployment and Life Expectancy ~
+Life Expectancy ~ Log Unemployment and Life Expectancy ~
 Death Rate do not follow a linear trend, i.e., they cannot be
 effectively modeled by a linear function. Therefore, our team chose to
 remove those variables from our MLR model as we deemed that they are not
 useful in predicting Life Expectancy.
-
-# Fitting Preliminary MLRM and Checking for Multi-Collinearity
 
 ## Fitting first MLRM with 7 Variables, i.e., Model 0
 
@@ -182,7 +176,7 @@ vif(model_0)
     ##  Pop.Dens       GDP Fert.Rate       CO2 Urban.Pop  Diabetes      Infl 
     ##  1.200707  6.384505  3.458967  5.642539  2.424800  1.265287  1.175767
 
-As we can see that only two predictors have a Variance Inflation Factor
+As we can see that two predictors have a Variance Inflation Factor
 (VIF) \> 5, i.e., Log GDP Per Capita and Log CO2. This suggests that
 there is a multi-collinearity issue between those two predictors.
 
@@ -440,6 +434,10 @@ Diabetes.**
 
 ### Confidence Interval Test
 
+```{r, echo = F}
+confint(model_1, level = 0.95)
+```
+
     ##                    2.5 %      97.5 %
     ## (Intercept) 49.360064886 63.48232090
     ## Pop.Dens    -0.101569838  0.62550621
@@ -516,13 +514,11 @@ As p-value \< 0.05, we reject the null hypothesis and conclude that
 
 ## Running Necessary Diagnostics and Interpreting Final MLR model
 
-### Exploratory plot for model 2
-
-![](Predicting_Life_Expectancy_files/figure-markdown_github/unnamed-chunk-31-1.png)
-
 ### Checking for multi-collinearity
 
-![](Predicting_Life_Expectancy_files/figure-markdown_github/unnamed-chunk-32-1.png)
+```
+vif(model_2)
+```
 
     ##       GDP Fert.Rate  Diabetes 
     ##  2.816757  2.886539  1.061568
@@ -533,8 +529,6 @@ looking at the correlation heat map, i.e., all combinations of
 predictors have different shades of color.
 
 ### Running Diagnostic Tests to check for MLR Assumptions
-
-![](Predicting_Life_Expectancy_files/figure-markdown_github/unnamed-chunk-33-1.png)
 
 The Residuals vs Fitted plot is uniformly distributed along the 0 line.
 This confirms our assumption that the model is relatively linear.
