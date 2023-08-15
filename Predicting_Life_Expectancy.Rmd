@@ -1,0 +1,539 @@
+---
+title: Predicting Life Expectancy Using Various Fundamental Global Demographical, Economic, Envirnomental, and Health Indicators
+author: "S. Sudhir, Kyle Zorn, Ching Hern Loh"
+date: "2022-12-05"
+output: 
+  html_document: 
+    toc: yes
+    theme: readable
+    highlight: tango
+---
+
+```{r, setup = TRUE, include = FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=10) 
+
+library(readxl)
+library(dplyr)
+library(car)
+library(reactable)
+library(forestmangr)
+library(ggplot2)
+library(ggpubr)
+library(gridExtra)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+
+A <- c(1,1,2,2,3,3)
+B <- c(4,4,5,5,6,6)
+C <- c(7,7,8,8,9,9)
+
+matrix <- matrix(c(A,A,B,B,C,C), nrow = 6, ncol = 6)
+
+natrix <- matrix(c(1,1,2,2,1,1,2,2,3,3,4,4,3,3,4,4), nrow = 4, ncol = 4)
+```
+
+# Introduction
+
+Our team is interested in modeling **Life Expectancy** using a combination of various fundamental global indicators available at the [World Bank](<https://databank.worldbank.org/home>). Among the various indicators for which data was available, we chose only those with sufficient data provided for most countries, had the latest data no older than three years, and were seemingly unrelated to other indicators to mitigate any multi-collinearity issues. 
+
+After careful consideration, we chose **Population Density, GDP per Capita, Fertility Rate, CO2 emissions, Unemployment Rate, Death Rate, Urban Population, Diabetes** and **Inflation** as our leading indicators to try and predict Life Expectancy. We collated the latest available data for all indicators into one excel sheet and loaded the data set in Rstudio to run our analysis.
+
+```{r, echo = F}
+data <- na.omit(read_excel("World_Bank_Dataset.xlsx"))
+```
+
+Our main goal with this was to apply a Multiple Linear Regression Model (MLRM) using the most useful and significant indicators to accurately model and predict Life Expectancy. 
+
+# Question of Interest
+
+Using nine various fundamental global indicators, i.e., Population Density, GDP Per Capita, Fertility Rate, Unemployment, CO2, Death Rate, Urban Population, Diabetes, and Inflation, which ones are the most significant to model and predict Life Expectancy using Multiple Linear Regression Model (MLRM)?
+
+# About the Dataset
+
+`Life.Exp`: **Life expectancy at birth, total (years) (2019)** - Life expectancy at birth indicates the number of years a newborn infant would live if prevailing patterns of mortality at the time of its birth were to stay the same throughout its life.
+[Life.Exp Dataset](<https://data.worldbank.org/indicator/SP.DYN.LE00.IN?view=chart>)
+
+`Pop.Dens`: **Population density (people per sq. km of land area) (2020)** - Population density is midyear population divided by land area in square kilometers. Population is based on the de facto definition of population, which counts all residents regardless of legal status or citizenship--except for refugees not permanently settled in the country of asylum, who are generally considered part of the population of their country of origin. Land area is a country's total area, excluding area under inland water bodies, national claims to continental shelf, and exclusive economic zones.
+In most cases the definition of inland water bodies includes major rivers and lakes.
+[Pop.Dens Dataset](<https://data.worldbank.org/indicator/EN.POP.DNST?view=chart>)
+
+`GDP`: **GDP per capita (current US\$) (2020)** - GDP per capita is gross domestic product divided by midyear population.
+GDP is the sum of gross value added by all resident producers in the economy plus any product taxes and minus any subsidies not included in the value of the products. It is calculated without making deductions for depreciation of fabricated assets or for depletion and degradation of natural resources. Data are in current U.S. dollars.
+[GDP Dataset](<https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?view=chart>)
+
+`Fert.Rate`: **Fertility rate, total (births per woman) (2020)** - Total fertility rate represents the number of children that would be born to a woman if she were to live to the end of her childbearing years and bear children in accordance with age-specific fertility rates of the specified year.
+[Fert.Rate Dataset](<https://data.worldbank.org/indicator/SP.DYN.TFRT.IN?view=chart>)
+
+`Unemp`: **Unemployment, total (% of total labor force) (modeled ILO estimate) (2021)** - Unemployment refers to the share of the labor force that is without work but available for and seeking employment.
+[Unemp Dataset](<https://data.worldbank.org/indicator/SL.UEM.TOTL.ZS?view=chart>)
+
+`CO2`: **CO2 emissions (metric tons per capita) (2019)** - Carbon dioxide emissions are those stemming from the burning of fossil fuels and the manufacture of cement.nThey include carbon dioxide produced during consumption of solid, liquid, and gas fuels and gas flaring.
+[CO2 Dataset](<https://data.worldbank.org/indicator/EN.ATM.CO2E.PC?view=chart>)
+
+`Death.Rate`: **Death rate, crude (per 1,000 people)** - Crude death rate indicates the number of deaths occurring during the year, per 1,000 population estimated at midyear. Subtracting the crude death rate from the crude birth rate provides the rate of natural increase, which is equal to the rate of population change in the absence of migration.
+[Death.Rate Dataset](<https://data.worldbank.org/indicator/SP.DYN.CDRT.IN?view=chart>)
+
+`Urban.Pop`: **Urban population (% of total population) (2021)** - Urban population refers to people living in urban areas as defined by national statistical offices. The data are collected and smoothed by United Nations Population Division.
+[Urban.Pop Dataset](<https://data.worldbank.org/indicator/SP.URB.TOTL.IN.ZS?view=chart>)
+
+`Diabetes`: **Diabetes prevalence (% of population ages 20 to 79) (2021)** - Diabetes prevalence refers to the percentage of people ages 20-79 who have type 1 or type 2 diabetes. It is calculated by adjusting to a standard population age-structure.
+[Diabetes Dataset](<https://data.worldbank.org/indicator/SH.STA.DIAB.ZS?view=chart>)
+
+`Infl`: **Inflation, consumer prices (annual %) (2019)** - Inflation as measured by the consumer price index reflects the annual percentage change in the cost to the average consumer of acquiring a basket of goods and services that may be fixed or changed at specified intervals, such as yearly.
+[Inflation Dataset](<https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?view=chart>)
+
+*Note: some data points have no values associated to it. In order to fix this, we ran the na.omit() function to eliminate all rows with empty parameters. That being said, it is essential to acknowledge that omitting rows with empty parameters may cause a bias in our data as we will be removing many developing/under-developed from our dataset thereby causing us to only look at those countries which have the data to provide.*
+
+# Exploratory Visuals
+
+## Summary table of dataframe
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+library(psych)
+describe(data[ , c('Life.Exp', 'Pop.Dens', 'GDP', 'Fert.Rate', 'Unemp', 'CO2', 'Death.Rate', 'Urban.Pop', 'Diabetes', 'Infl')], fast = TRUE)
+```
+
+## Histograms and Boxplots for predictors
+
+```{r, echo = FALSE}
+layout(matrix)
+
+hist(data$Pop.Dens, breaks = 15, main = "Histogram for Population Density", xlab = "Population Density", freq = F);
+lines(density(data$Pop.Dens), col = "lightcoral", lwd = 1.5);
+par(new = TRUE);
+boxplot(data$Pop.Dens, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$GDP, breaks = 15, main = "Histogram for GDP Per Capita", xlab = "GDP Per Capita", freq = F);
+lines(density(data$GDP), col = "lightcoral", lwd = 1.5);
+par(new = TRUE);
+boxplot(data$GDP, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1)
+
+hist(data$Fert.Rate, breaks = 15, main = "Histogram for Fertility Rate", xlab = "Fertility Rate", freq = F);
+lines(density(data$Fert.Rate), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Fert.Rate, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$Unemp, breaks = 15, main = "Histogram for Unemployment", xlab = "Unemployment Rate", freq = F);
+lines(density(data$Unemp), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Unemp, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$CO2, breaks = 15, main = "Histogram for CO2", xlab = "CO2", freq = F);
+lines(density(data$CO2), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$CO2, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1)
+
+
+hist(data$Death.Rate, breaks = 15, main = "Histogram for Death Rate", xlab = "Death Rate", freq = F);
+lines(density(data$Death.Rate), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Death.Rate, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$Urban.Pop, breaks = 15, main = "Histogram for Urban Population", xlab = "Urban Population", freq = F);
+lines(density(data$Urban.Pop), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Urban.Pop, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$Diabetes, breaks = 15, main = "Histogram for Diabetes", xlab = "Diabetes", freq = F);
+lines(density(data$Diabetes), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Diabetes, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$Infl, breaks = 15, main = "Histogram for Inflation", xlab = "Inflation", freq = F);
+lines(density(data$Infl), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Infl, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+```
+
+From the boxplot/histogram above, we can see that many of the predictor variables are heavily skewed to the right due to the presence of extreme outliers. In order to rectify these issues, our team chose to use the logarithmic scaling for the necessary variables in order to make our predictors resemble a Gaussian distribution and reduce the effect of outliers.
+
+```{r, echo = F}
+data$Pop.Dens <- log(data$Pop.Dens)
+data$GDP <- log(data$GDP)
+data$Fert.Rate <- log(data$Fert.Rate)
+data$Infl <- sign(data$Infl) * log(abs(data$Infl))
+data$CO2 <- log(data$CO2)
+data$Diabetes <- log(data$Diabetes)
+data$Unemp <- log(data$Unemp)
+```
+
+```{r, echo = F}
+layout(matrix)
+
+hist(data$Pop.Dens, breaks = 15, main = "Histogram for Log Population Density", xlab = "Log Population Density", freq = F);
+lines(density(data$Pop.Dens), col = "lightcoral", lwd = 1.5);
+par(new = TRUE);
+boxplot(data$Pop.Dens, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$GDP, breaks = 15, main = "Histogram for Log GDP Per Capita", xlab = "Log GDP Per Capita", freq = F);
+lines(density(data$GDP), col = "lightcoral", lwd = 1.5);
+par(new = TRUE);
+boxplot(data$GDP, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1)
+
+hist(data$Fert.Rate, breaks = 15, main = "Histogram for Log Fertility Rate", xlab = "Log Fertility Rate", freq = F);
+lines(density(data$Fert.Rate), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Fert.Rate, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$Unemp, breaks = 15, main = "Histogram for Log Unemployment", xlab = "Log Unemployment Rate", freq = F);
+lines(density(data$Unemp), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Unemp, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$CO2, breaks = 15, main = "Histogram for Log CO2", xlab = "Log CO2", freq = F);
+lines(density(data$CO2), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$CO2, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1)
+
+hist(data$Death.Rate, breaks = 15, main = "Histogram for Death Rate", xlab = "Death Rate", freq = F);
+lines(density(data$Death.Rate), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Death.Rate, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$Urban.Pop, breaks = 15, main = "Histogram for Urban Population", xlab = "Urban Population", freq = F);
+lines(density(data$Urban.Pop), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Urban.Pop, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$Diabetes, breaks = 15, main = "Histogram for Log Diabetes", xlab = "Log Diabetes", freq = F);
+lines(density(data$Diabetes), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Diabetes, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+
+hist(data$Infl, breaks = 15, main = "Histogram for Log Inflation", xlab = "Log Inflation", freq = F);
+lines(density(data$Infl), lwd = 1.5, col = "lightcoral");
+par(new = TRUE);
+boxplot(data$Infl, horizontal = TRUE, axes = FALSE, col = rgb(0, 0.8, 1, alpha = 0.5));
+grid(nx = NA, ny = NULL, lty = 2, col = "gray", lwd = 1);
+```
+
+## Scatter plots with Life Expectancy as Response Variable
+
+```{r, echo = FALSE, message = FALSE}
+layout(mat = matrix(c(1,2,3,4,5,6,7,8,9), nrow = 3, ncol = 3, byrow = TRUE))
+
+plt1 <- plot(Life.Exp ~ Pop.Dens, data = data, xlab = 'Log Population Density', ylab = 'Life Expectancy', main = 'Log Population Density ~ Life Expectancy') + abline(lm(Life.Exp ~ Pop.Dens, data = data), col = 'lightcoral', lwd = 2)
+
+plt7 <- plot(Life.Exp ~ Unemp, data = data, xlab = 'Log Unemployment Rate', ylab = 'Life Expectancy', main = 'Log Unemployment Rate ~ Life Expectancy') + abline(lm(Life.Exp ~ Unemp, data = data), col = 'lightcoral', lwd = 2)
+
+plt9 <- plot(Life.Exp ~ Urban.Pop, data = data, xlab = 'Urban Population', ylab = 'Life Expectancy', main = 'Urban Populatin vs Life Expectancy') + abline(lm(Life.Exp ~ Urban.Pop, data = data), col = 'lightcoral', lwd = 2)
+
+plt2 <- plot(Life.Exp ~ GDP, data = data, xlab = 'Log GDP Per Capita', ylab = 'Life Expectancy', main = 'Log GDP Per Capita vs Life Expectancy') + abline(lm(Life.Exp ~ GDP, data = data), col = 'lightcoral', lwd = 2)
+
+plt5 <- plot(Life.Exp ~ CO2, data = data, xlab = 'Log CO2', ylab = 'Life Expectancy', main = 'Log CO2 vs Life Expectancy') + abline(lm(Life.Exp ~ CO2, data = data), col = 'lightcoral', lwd = 2)
+
+plt6 <- plot(Life.Exp ~ Diabetes, data = data, xlab = 'Log Diabetes', ylab = 'Life Expectancy', main = 'Diabetes vs Life Expectancy') + abline(lm(Life.Exp ~ Diabetes, data = data), col = 'lightcoral', lwd = 2)
+
+plt3 <- plot(Life.Exp ~ Fert.Rate, data = data, xlab = 'Log Fertility Rate', ylab = 'Life Expectancy', main = 'Log Fertility Rate vs Life Expectancy') + abline(lm(Life.Exp ~ Fert.Rate, data = data), col = 'lightcoral', lwd = 2)
+
+plt8 <- plot(Life.Exp ~ Death.Rate, data = data, xlab = 'Death Rate', ylab = 'Life Expectancy', main = 'Death Rate vs Life Expectancy') + abline(lm(Life.Exp ~ Pop.Dens, data = data), col = 'lightcoral', lwd = 2)
+
+plt4 <- plot(Life.Exp ~ Infl, data = data, xlab = 'Log Inflation', ylab = 'Life Expectancy', main = 'Log Inflation vs Life Expectancy') + abline(lm(Life.Exp ~ Infl, data = data), col = 'lightcoral', lwd = 2)
+```
+
+We can see that Life Expectancy \~ Log Unemployment and Life Expectancy \~ Death Rate do not follow a linear trend, i.e., they cannot be effectively modeled by a linear function. Therefore, our team chose to remove those variables from our MLR model as we deemed that they are not useful in predicting Life Expectancy.
+
+# Fitting Preliminary MLRM and Checking for Multi-Collinearity
+
+## Fitting first MLRM with 7 Variables, i.e., Model 0
+
+```{r}
+model_0 <- lm(Life.Exp ~ Pop.Dens + GDP + Fert.Rate + CO2 + Urban.Pop + Diabetes + Infl, data)
+summary(model_0)
+```
+
+## Checking for Multi-Collinearity for Model 0
+
+```{r}
+vif(model_0)
+```
+
+As we can see that two predictors have a Variance Inflation Factor (VIF) > 5, i.e., Log GDP Per Capita and Log CO2. This suggests that there is a multi-collinearity issue between those two predictors. 
+
+The multi-collinearity can be explained as a high GDP Per Capita implies that, on average, there is more production in the economy by resident producers, which implies that there is more CO2 emissions to facilitate those productions. 
+
+Therefore, in order to address this multi-collinearity issue, our team chose to remove Log CO2 from our model and continue our analysis on the MLRM with the remaining variables.
+
+## Fitting second MLRM with remaining 6 Variables, i.e., model 1
+
+```{r}
+model_1 <- lm(Life.Exp ~ Pop.Dens + GDP + Fert.Rate + Urban.Pop + Diabetes + Infl, data)
+summary(model_1)
+```
+
+## Checking for Multi-Collinearity for model 1
+
+```{r}
+vif(model_1)
+```
+
+As all our predictors have VIF < 5, we can conclude that our model no longer shows a multi-collinarity issue. Thus allowing us to run Goodness of Fit and F-tests to see which of our variables are most useful.
+
+## Conducting Goodness of Fit Test and F-tests to Check for Useful Predictors
+
+### To check if at least one predictor is useful in model 1
+
+In order to know if any of our predictors are useful, we can do the Goodness of Fit Test and calculate an F-statistic where:
+
+Null Model $(H_0)$ is that none of the variables are useful, i.e., $$H_0: \beta_j = 0\;\;\;\forall j$$ 
+
+Alternative Model $(H_A)$ is that at least one variable is useful, i.e., $$H_A: \beta_j \neq 0\;\;\;\exists j$$
+
+```{r}
+Y = data$Life.Exp
+n = length(Y)
+SST = sum((Y - mean(Y))^2)
+SSE = sum(resid(model_1)^2)
+MSE = SSE / model_1$df.residual
+SSR = SST - SSE
+MSR = SSR / (n - 1 - model_1$df.residual)
+F = MSR / MSE
+alpha = 0.05
+pval = 1 - pf(F,6,200) # from the summary(model_1) table
+out = data.frame(SSE_RM = SST,SSE_FM = SSE, F=F, pval = pval,Fcrit=qf(1-alpha,6,200))
+
+print(out)
+```
+
+As our F-statistic 149.39 is much greater than F-critical 2.14, which has an extremely low corresponding p-value $\approx$ 0, we favor the alternative hypothesis over the null hypothesis, i.e., at least one of the predictors is useful.
+
+### To check the usefulness of each predictor in model 1, assuming all other predictors remain constant
+
+In order to test if each individual predictor is useful, we conduct F-tests (assuming all other predictors remain constant) by running an ANOVA (reduced model, full model) tests where reduced model = full model without $j$ variable, and:
+
+Null Model $(H_0)$ is that $j$ variable is not useful, i.e., $$H_0: \beta_j = 0\;\;\;\text{for}\;\; j$$
+
+Alternative Model $(H_A)$ is that $j$ variable is useful, i.e., $$H_0: \beta_j \neq 0\;\;\;\text{for}\;\; j$$
+
+**For Log Population Density:**
+
+```{r}
+RM = lm(Life.Exp ~ GDP + Fert.Rate + Urban.Pop + Diabetes + Infl, data)
+anova(RM, model_1)
+```
+
+```{r, echo = F}
+pval_pop.dens <- anova(RM, model_1)$"Pr(>F)"[2]
+```
+
+**For Log GDP Per Capita**
+
+```{r}
+RM = lm(Life.Exp ~ Pop.Dens + Fert.Rate + Urban.Pop + Diabetes + Infl, data)
+anova(RM, model_1)
+```
+
+```{r, echo = F}
+pval_gdp <- anova(RM, model_1)$"Pr(>F)"[2]
+```
+
+**For Log Fertility Rate**
+
+```{r}
+RM = lm(Life.Exp ~ Pop.Dens + GDP + Urban.Pop + Diabetes + Infl, data)
+anova(RM, model_1)
+```
+
+```{r, echo = F}
+pval_fert.rate <- anova(RM, model_1)$"Pr(>F)"[2]
+```
+
+**For Urban Population**
+
+```{r}
+RM = lm(Life.Exp ~ Pop.Dens + GDP + Fert.Rate + Diabetes + Infl, data)
+anova(RM, model_1)
+```
+
+```{r, echo = F}
+pval_urban.pop <- anova(RM, model_1)$"Pr(>F)"[2]
+```
+
+**For Log Diabetes**
+
+```{r}
+RM = lm(Life.Exp ~ Pop.Dens + GDP + Fert.Rate + Urban.Pop + Infl, data)
+anova(RM, model_1)
+```
+
+```{r, echo = F}
+pval_diabetes <- anova(RM, model_1)$"Pr(>F)"[2]
+```
+
+**For Log Inflation**
+
+```{r}
+RM = lm(Life.Exp ~ Pop.Dens + GDP + Fert.Rate + Urban.Pop + Diabetes, data)
+anova(RM, model_1)
+```
+
+```{r, echo = F}
+pval_infl <- anova(RM, model_1)$"Pr(>F)"[2]
+```
+
+### Using Holm-Bonferroni method to control family-wise error rate (FWER) and conduct our F-tests
+
+Since we are conducting a non-trivial number of tests, it is essential to first control our Family-Wise Error Rate (FWER) and Type I error rate before conducting our hypothesis analysis. 
+
+In order to control our FWER, we first sort our test p-values from lowest to highest.
+
+```{r, echo = F}
+pvals <- c(pval_pop.dens, pval_gdp, pval_fert.rate, pval_urban.pop, pval_diabetes, pval_infl)
+pvals1 <- sort(pvals)
+pvals1
+```
+
+Then, we match the smallest p-value with the significance level $\alpha/m$, then match the next smallest one to $\alpha/(m−1)$, then match the next to $\alpha/(m−2)$, etc… until we match the largest to $\alpha$.
+
+```{r}
+pvals2 <- c(0.05/6)
+
+for(i in 1:5)
+{
+  new_value = 0.05/(6 - i)
+  pvals2 <- c(pvals2, new_value)
+}
+pvals2
+```
+
+We then look for the first time a p-value is greater than a significance level, and reject every p-value before that point
+
+```{r, echo = F}
+counter = 0
+for(i in 1:6)
+{
+  if(pvals1[i] < pvals2[i])
+  {
+   counter = counter + 1
+  }
+}
+print(pvals1[1:counter])
+```
+
+Therefore, by conducting F-tests with Holm-Bonferroni method to control our FWER and Type 1 error rate, we conclude that our significant predictors are **Log GDP Per Capita, Log Fertility Rate**, and **Log Diabetes.**
+
+### Confidence Interval Test
+
+```{r, echo = F}
+confint(model_1, level = 0.95)
+```
+
+As the predictors with $0$ in their respective $95\%$ confidence interval are not significant, we can conclude that **Log Population Density, Urban Population** and **Log Inflation** are not significant, and thus we remove them from our model.
+
+# Fitting Final MLRM with the remaining 3 Predictors (model 2)
+
+```{r}
+model_2 <- lm(Life.Exp ~ GDP + Fert.Rate + Diabetes, data)
+summary(model_2)
+```
+
+## Running Goodness of Fit test to check if model 2 is more useful than model 1
+
+To verify our conclusion, we can run another F-test using anova(model 2, model 1), where:
+
+Null hypothesis $(H_0)$ is that the subset of predictors are not useful, i.e., $$H_0: \beta_j = 0\;\;\;where\;j\in I$$ 
+
+Alternative hypothesis $(H_A)$ is that at least one of the subset of predictors is useful, i.e., $$H_A: \beta_j\neq0\;\;\;where\;j\in I$$ and $I$ is our set of subset predictors
+
+```{r}
+anova(model_2, model_1)
+```
+
+As p-value < 0.05, we reject the null hypothesis and conclude that **model 2 is a more useful in predicting Life Expectancy than model 1**.
+
+## Running Necessary Diagnostics and Interpreting Final MLR model
+
+### Exploratory plot for model 2
+
+```{r, echo = FALSE, message = FALSE}
+data <- data[c(2,4,5,10)]
+library(GGally)
+ggpairs(data) 
+```
+
+### Checking for multi-collinearity
+
+```{r, echo = FALSE}
+library(reshape2)
+
+  get_upper_tri <- function(cormat){
+    cormat[lower.tri(cormat)]<- NA
+    return(cormat)
+  }
+  
+cormat <- round(cor(data),2)
+upper_tri <- get_upper_tri(cormat)
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
+ geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Pearson\nCorrelation\n") +
+  theme_minimal()+ 
+ theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+    size = 12, hjust = 1))+
+ coord_fixed()
+```
+
+```{r}
+vif(model_2)
+```
+
+As all our VIF values are < 5, we can conclude that there is no issues of multi-collinearity in our model. This can also be confirmed by looking at the correlation heat map, i.e., all combinations of predictors have different shades of color. 
+
+### Running Diagnostic Tests to check for MLR Assumptions
+
+```{r, echo = FALSE}
+layout(natrix)
+plot(model_2)
+```
+
+The Residuals vs Fitted plot is uniformly distributed along the 0 line. This confirms our assumption that the model is relatively linear.
+
+The Scale-Location shows no clear pattern among the residuals. This satisfies Homoskedasticity assumption for our multiple linear model.
+
+The Normal Q-Q plot is more or less consistent with the straight line with minor deviations in the bottom left. Therefore, we can conclude that our model has residuals that are approximately normally distributed.
+
+The Residuals vs Leverage plot shows us that there exists no extreme points with high leverage or within the cooks distance which could hugely influence our linear model.
+
+### Interpreting Summary Table for Model 2
+
+```{r, echo = FALSE}
+tab_model(model_2, show.se = TRUE, show.std = TRUE, show.stat = TRUE)
+```
+<br>
+Therefore, we can see that our MLRM is of the form $$\hat{(\text{Life.Exp})}_i = (55.86) + (2.32) \cdot (\text{Log GDP})_{i} - (7.65) \cdot (\text{Log Fert.Rate})_{i} + (1.54) \cdot (\text{Log Diabetes})_{i}$$ 
+
+We can also see that all our predictors (including the intercept) are significant, and our model explains $\approx$ 81% of variation in Life Expectancy.
+
+# Summary and Conclusion
+
+We created a dataset by choosing various fundamental global indicators from the World Bank in an attempt to try and predict Life Expectancy. Our chosen indicators were Population Density, GDP per Capita, Fertility Rate, CO2 emissions, Unemployment Rate, Death Rate, Urban Population, Diabetes and Inflation.
+
+Next, we plotted histogram/boxplots/density plots for all predictors, and did the required log transformation to try and get our data to be more normally distributed and to account for extreme outliers.
+
+After the transformations, we plotted 9 scatter plots, each with Life expectancy in the y-axis and the predictors in the x-axis. We noticed that Life Expectancy ~ Log Unemployment and Life Expectancy ~ Death Rate had non-linear trends, thus we removed those predictors from our model.
+
+With the remaining predictors, we fit a preliminary MLRM and ran the variance Inflation Factor (VIF) function to check for multi-collinearity. As Log GDP and Log CO2 had a VIF > 5, we chose to eliminate Log CO2 as a predictor and checked that the new model has VIFs < 5.
+
+We used the Goodness of Fit Test using nested models to check the usefulness of each predictor, i.e., to see if the predictors are significant to our model (assuming all other predictors remain fixed). We chose to run Holm-Bonferroni method to control the family-wise error and type 1 error rate. We noticed that Log GDP Per Capita, Log Fertility Rate and Log Diabetes were the significant variables to our model. We also confirmed our analysis by looking at the confidence intervals and running a final Goodness of Fit Test to check if our newest model was more useful in predicting Life Expectancy than our previous model.
+
+Finally, we fit final MLR model, plotted some exploratory graphs, and ran some basic diagnostic plots to confirm that all assumptions of MLR have been met and concluded that our model is a good fit where all predictors (including intercept) are significant and explains approximately $81\%$ of the variation in Life Expectancy.
