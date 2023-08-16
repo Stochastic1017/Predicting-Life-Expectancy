@@ -115,11 +115,11 @@ to provide.*
 
 ## Summary table of dataframe
 
-<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Dataset_Summary.png" width="1000" height="300">
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Dataset_Summary.png" width="500" height="350">
 
 ## Histograms and Boxplots for predictors
 
-<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/unscaled_histogram.png" width="5000" height="750">
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/unscaled_histogram.png" width="500" height="350">
 
 Many of the predictor variables are heavily skewed to the right due to the presence of extreme outliers. 
 In order to rectify these issues, our team chose to use the logarithmic scaling for the necessary variables in order to make our predictors resemble a Gaussian distribution and reduce the effect of outliers.
@@ -134,11 +134,11 @@ data$Diabetes <- log(data$Diabetes)
 data$Unemp <- log(data$Unemp)
 ```
 
-<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/scaled%20histogram.png" width="5000" height="750">
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/scaled%20histogram.png" width="500" height="350">
 
 ## Scatterplot with `Life.Exp` as response variable
 
-<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/scaled%20scatterplots.png" width="5000" height="750">
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/scaled%20scatterplots.png" width="500" height="350">
 
 Life Expectancy ~ Log Unemployment and Life Expectancy ~
 Death Rate do not follow a linear trend, i.e., they cannot be
@@ -515,7 +515,7 @@ As p-value \< 0.05, we reject the null hypothesis and conclude that
 
 ### Exploratory plot for model 2
 
-<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Final%20model%20visuals.png" width="5000" height="750">
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Final%20model%20visuals.png" width="500" height="350">
 
 ### Checking for multi-collinearity
 
@@ -526,7 +526,7 @@ vif(model_2)
     ##       GDP Fert.Rate  Diabetes 
     ##  2.816757  2.886539  1.061568
 
-<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Final%20model%20heatmap.png" width="5000" height="750">
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Final%20model%20heatmap.png" width="500" height="350">
 
 As all our VIF values are \< 5, we can conclude that there is no issues
 of multi-collinearity in our model. This can also be confirmed by
@@ -535,7 +535,7 @@ predictors have different shades of color.
 
 ### Running Diagnostic Tests to check for MLR Assumptions
 
-<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Final%20model%20diagnositics.png" width="5000" height="750">
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Final%20model%20diagnositics.png" width="500" height="350">
 
 The Residuals vs Fitted plot is uniformly distributed along the 0 line.
 This confirms our assumption that the model is relatively linear.
