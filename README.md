@@ -1,7 +1,5 @@
 # Predicting Life Expectancy Using Various Fundamental Global Demographical, Economic, Envirnomental, and Health Indicators
 
-**Note: This is a much shorter version of the actual paper. The README does not contain many crucial plots used to conduct the following analysis. The html file to view the entire project can be found [here](https://htmlpreview.github.io/?https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Predicting_Life_Expectancy.html).**
-
 # Introduction
 
 Our team is interested in modeling **Life Expectancy** using a
@@ -113,6 +111,16 @@ will be removing many developing/under-developed from our dataset
 thereby causing us to only look at those countries which have the data
 to provide.*
 
+# Exploratory Visuals
+
+## Summary table of dataframe
+
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Dataset_Summary.png" width="1000" height="300">
+
+## Histograms and Boxplots for predictors
+
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/unscaled_histogram.png" width="5000" height="750">
+
 Many of the predictor variables are heavily skewed to the right due to the presence of extreme outliers. 
 In order to rectify these issues, our team chose to use the logarithmic scaling for the necessary variables in order to make our predictors resemble a Gaussian distribution and reduce the effect of outliers.
 
@@ -126,13 +134,19 @@ data$Diabetes <- log(data$Diabetes)
 data$Unemp <- log(data$Unemp)
 ```
 
-# Fitting Preliminary MLRM and Checking for Multi-Collinearity
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/scaled%20histogram.png" width="5000" height="750">
+
+## Scatterplot with `Life.Exp` as response variable
+
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/scaled%20scatterplots.png" width="5000" height="750">
 
 Life Expectancy ~ Log Unemployment and Life Expectancy ~
 Death Rate do not follow a linear trend, i.e., they cannot be
 effectively modeled by a linear function. Therefore, our team chose to
 remove those variables from our MLR model as we deemed that they are not
 useful in predicting Life Expectancy.
+
+# Fitting Preliminary MLRM and Checking for Multi-Collinearity
 
 ## Fitting first MLRM with 7 Variables, i.e., Model 0
 
@@ -239,15 +253,7 @@ of Fit and F-tests to see which of our variables are most useful.
 ### To check if at least one predictor is useful in model 1
 
 In order to know if any of our predictors are useful, we can do the
-Goodness of Fit Test and calculate an F-statistic where:
-
-Null Model (*H*<sub>0</sub>) is that none of the variables are useful,
-i.e.,
-*H*<sub>0</sub> : *β*<sub>*j*</sub> = 0   ∀*j*
-
-Alternative Model (*H*<sub>*A*</sub>) is that at least one variable is
-useful, i.e.,
-*H*<sub>*A*</sub> : *β*<sub>*j*</sub> ≠ 0   ∃*j*
+Goodness of Fit Test and calculate an F-statistic:
 
 ``` r
 Y = data$Life.Exp
@@ -278,14 +284,7 @@ predictors is useful.
 In order to test if each individual predictor is useful, we conduct
 F-tests (assuming all other predictors remain constant) by running an
 ANOVA (reduced model, full model) tests where reduced model = full model
-without *j* variable, and:
-
-Null Model (*H*<sub>0</sub>) is that *j* variable is not useful, i.e.,
-*H*<sub>0</sub> : *β*<sub>*j*</sub> = 0   for  *j*
-
-Alternative Model (*H*<sub>*A*</sub>) is that *j* variable is useful,
-i.e.,
-*H*<sub>0</sub> : *β*<sub>*j*</sub> ≠ 0   for  *j*
+without jth variable:
 
 **For Log Population Density:**
 
@@ -514,6 +513,10 @@ As p-value \< 0.05, we reject the null hypothesis and conclude that
 
 ## Running Necessary Diagnostics and Interpreting Final MLR model
 
+### Exploratory plot for model 2
+
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Final%20model%20visuals.png" width="5000" height="750">
+
 ### Checking for multi-collinearity
 
 ```
@@ -523,12 +526,16 @@ vif(model_2)
     ##       GDP Fert.Rate  Diabetes 
     ##  2.816757  2.886539  1.061568
 
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Final%20model%20heatmap.png" width="5000" height="750">
+
 As all our VIF values are \< 5, we can conclude that there is no issues
 of multi-collinearity in our model. This can also be confirmed by
 looking at the correlation heat map, i.e., all combinations of
 predictors have different shades of color.
 
 ### Running Diagnostic Tests to check for MLR Assumptions
+
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Final%20model%20diagnositics.png" width="5000" height="750">
 
 The Residuals vs Fitted plot is uniformly distributed along the 0 line.
 This confirms our assumption that the model is relatively linear.
