@@ -115,7 +115,7 @@ to provide.*
 
 ## Summary table of dataframe
 
-<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Dataset_Summary.png" width="500" height="350">
+<img src="https://github.com/Stochastic1017/Predicting-Life-Expectancy/blob/main/Images/Dataset_Summary.png" width="1000" height="350">
 
 ## Histograms and Boxplots for predictors
 
