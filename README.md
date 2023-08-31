@@ -1,4 +1,4 @@
-# Predicting Life Expectancy Using Various Fundamental Global Demographical, Economic, Envirnomental, and Health Indicators
+# Predicting Life Expectancy Using Various Fundamental Global Demographical, Economic, Environmental, and Health Indicators
 
 # Introduction
 
